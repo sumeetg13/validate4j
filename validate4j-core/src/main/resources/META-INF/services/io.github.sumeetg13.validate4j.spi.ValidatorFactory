@@ -1,0 +1,6 @@
+io.github.sumeetg13.validate4j.validators.StringValidator$Factory
+io.github.sumeetg13.validate4j.validators.NumberValidator$Factory
+io.github.sumeetg13.validate4j.validators.PhoneValidator$Factory
+io.github.sumeetg13.validate4j.validators.EmailValidator$Factory
+io.github.sumeetg13.validate4j.validators.EnumValidator$Factory
+io.github.sumeetg13.validate4j.validators.DateValidator$Factory

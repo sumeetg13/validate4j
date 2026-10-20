@@ -1,0 +1,3 @@
+form: login
+fields:
+  email: { type: email, required: true }

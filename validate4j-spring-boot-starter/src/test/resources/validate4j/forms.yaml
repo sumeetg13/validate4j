@@ -1,0 +1,19 @@
+forms:
+  signup:
+    fields:
+      name:
+        type: string
+        required: true
+        minLength: 2
+        maxLength: 50
+      age:
+        type: number
+        required: true
+        integer: true
+        min: 18
+        max: 120
+      phone:
+        type: phone
+        digits: [10, 12]
+      code:
+        type: uppercase

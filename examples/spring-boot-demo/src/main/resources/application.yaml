@@ -1,0 +1,6 @@
+server:
+  port: 8080
+validate4j:
+  locations:
+    - classpath*:validate4j/*.yaml
+  parallel-threshold: 8

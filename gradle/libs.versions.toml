@@ -1,0 +1,26 @@
+[versions]
+snakeyaml = "2.7"
+junit = "5.14.4"
+assertj = "3.27.7"
+archunit = "1.5.1"
+springBoot = "4.1.1"
+mavenPublish = "0.37.0"
+
+[libraries]
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+archunit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "springBoot" }
+spring-boot-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
+spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
+spring-boot-starter-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-boot-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
+spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor" }
+
+[plugins]
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
+spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }

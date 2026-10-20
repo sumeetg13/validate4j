@@ -1,0 +1,29 @@
+forms:
+  signup:
+    fields:
+      name:
+        type: string
+        required: true
+        minLength: 2
+        maxLength: 50
+        pattern: "^[A-Za-z ]+$"
+        message: "Name must be 2-50 letters"
+      age:
+        type: number
+        required: true
+        integer: true
+        min: 18
+        max: 120
+      phone:
+        type: phone
+        required: true
+        digits: [10, 12]
+      email:
+        type: email
+      role:
+        type: enum
+        values: [admin, user]
+        ignoreCase: true
+      birthDate:
+        type: date
+        before: today
