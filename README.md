@@ -39,7 +39,23 @@ result.errors(); // [FieldError[field=name, code=string.minLength, message=Name 
 | `io.github.sumeetg13:validate4j-core` | Plain Java. No framework dependencies, only SnakeYAML. |
 | `io.github.sumeetg13:validate4j-spring-boot-starter` | Spring Boot 4.x. Auto-configures everything from `classpath:validate4j/*.yaml`. |
 
-> The first release is not on Maven Central yet. Until then, clone and run `./gradlew publishToMavenLocal`.
+Gradle:
+
+```kotlin
+implementation("io.github.sumeetg13:validate4j-spring-boot-starter:0.1.0")
+// or, without Spring:
+implementation("io.github.sumeetg13:validate4j-core:0.1.0")
+```
+
+Maven:
+
+```xml
+<dependency>
+    <groupId>io.github.sumeetg13</groupId>
+    <artifactId>validate4j-spring-boot-starter</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
 
 ## Spring Boot quickstart
 
