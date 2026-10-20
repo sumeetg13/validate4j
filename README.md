@@ -181,7 +181,7 @@ One-time setup:
 | `MAVEN_CENTRAL_USERNAME` | Central Portal token username |
 | `MAVEN_CENTRAL_PASSWORD` | Central Portal token password |
 | `GPG_SIGNING_KEY` | ASCII-armored private key from step 2 |
-| `GPG_SIGNING_KEY_ID` | Last 8 hex characters of the key id |
+| `GPG_SIGNING_KEY_ID` | Key id or fingerprint in any form. The workflow trims it to the 8-character short id Gradle needs. |
 | `GPG_SIGNING_PASSWORD` | Key passphrase |
 
 Releasing: set `version` in `build.gradle.kts` to a non-SNAPSHOT value, commit, then `git tag v0.1.0 && git push --tags`.
