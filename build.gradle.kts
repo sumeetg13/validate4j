@@ -5,7 +5,9 @@ plugins {
 
 allprojects {
     group = "io.github.sumeetg13"
-    version = "0.1.0"
+    // Release builds pass -PreleaseVersion=<x.y.z> (the publish workflow takes it from the git tag).
+    // Everything else builds the next snapshot.
+    version = providers.gradleProperty("releaseVersion").getOrElse("0.2.0-SNAPSHOT")
 
     repositories {
         mavenCentral()

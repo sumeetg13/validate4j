@@ -4,6 +4,14 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, e.g. 0.2.0 (the code at the selected ref is published)'
+        required: true
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -15,16 +23,54 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
-      - name: Publish to the Sonatype Central Portal
+
+      - name: Resolve release version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then VERSION="$INPUT_VERSION"; else VERSION="${GITHUB_REF_NAME#v}"; fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$VERSION' is not a release version like 1.2.3 or 1.2.3-rc.1"; exit 1
+          fi
+          if [[ "$VERSION" == *SNAPSHOT* ]]; then
+            echo "::error::Snapshots cannot be released to Maven Central"; exit 1
+          fi
+          URL="https://repo1.maven.org/maven2/io/github/sumeetg13/validate4j-core/$VERSION/validate4j-core-$VERSION.pom"
+          if [ "$(curl -s -o /dev/null -w '%{http_code}' "$URL")" = "200" ]; then
+            echo "::error::Version $VERSION is already on Maven Central. Tag a new version instead."; exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing $VERSION"
+
+      - name: Build and test
+        run: ./gradlew build -PreleaseVersion=${{ steps.version.outputs.version }} --no-daemon
+
+      - name: Publish and release on Maven Central
+        # publishAndReleaseToMavenCentral uploads, waits for validation, then releases automatically.
+        # (publishToMavenCentral would stop at "Validated" and wait for a manual Publish click.)
         # Gradle's signing plugin only accepts the 8-character short key id, so trim whatever
         # form the secret holds (short id, long id or full fingerprint) to its last 8 hex characters.
         run: |
           KEY_ID="${GPG_KEY_ID_RAW//[^0-9A-Fa-f]/}"
           export ORG_GRADLE_PROJECT_signingInMemoryKeyId="${KEY_ID: -8}"
-          ./gradlew publishToMavenCentral --no-daemon --no-configuration-cache
+          ./gradlew publishAndReleaseToMavenCentral -PreleaseVersion=${{ steps.version.outputs.version }} --no-daemon --no-configuration-cache
         env:
           GPG_KEY_ID_RAW: ${{ secrets.GPG_SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
+
+      - name: Summary
+        run: |
+          V=${{ steps.version.outputs.version }}
+          {
+            echo "### Released validate4j $V to Maven Central"
+            echo ""
+            echo "It can take up to 30 minutes to appear on repo1.maven.org."
+            echo ""
+            echo '```kotlin'
+            echo "implementation(\"io.github.sumeetg13:validate4j-spring-boot-starter:$V\")"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -184,11 +184,19 @@ One-time setup:
 | `GPG_SIGNING_KEY_ID` | Key id or fingerprint in any form. The workflow trims it to the 8-character short id Gradle needs. |
 | `GPG_SIGNING_PASSWORD` | Key passphrase |
 
-Releasing: set `version` in `build.gradle.kts` to a non-SNAPSHOT value, commit, then `git tag v0.1.0 && git push --tags`.
-The publish workflow uploads and validates the bundle; it stays in the portal's *Deployments* page until you press **Publish**.
-Pass `automaticRelease = true` to `publishToMavenCentral()` in the module build files to skip that manual step.
+Releasing: push a tag named after the version. The workflow takes the version from the tag, builds and
+tests, uploads to the Central Portal, and releases automatically.
 
-For local experiments, `./gradlew publishToMavenLocal` installs unsigned snapshots into `~/.m2`. The same
+```
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+The version in `build.gradle.kts` stays a `-SNAPSHOT` and never needs editing. The workflow refuses tags
+that are not a version like `1.2.3` or `1.2.3-rc.1`, and versions that already exist on Maven Central.
+You can also release from the Actions tab with *Run workflow*, entering the version by hand.
+
+For local experiments, `./gradlew publishToMavenLocal` installs unsigned `0.2.0-SNAPSHOT` builds into `~/.m2`. Add `-PreleaseVersion=x.y.z` to build a specific version. The same
 properties can be supplied locally in `~/.gradle/gradle.properties` (`mavenCentralUsername`, `mavenCentralPassword`,
 `signingInMemoryKey`, `signingInMemoryKeyId`, `signingInMemoryKeyPassword`).
 

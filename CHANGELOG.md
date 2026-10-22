@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-_Nothing yet._
+### Changed
+- Releases now publish automatically: pushing a `vX.Y.Z` tag builds, uploads and releases that version on Maven Central.
 
 ## 0.1.0 - 2026-10-20
 
