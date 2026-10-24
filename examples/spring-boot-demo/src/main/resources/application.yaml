@@ -4,3 +4,5 @@ validate4j:
   locations:
     - classpath*:validate4j/*.yaml
   parallel-threshold: 8
+  # Edit src/main/resources/validate4j/signup.yaml while bootRun is running; the change applies on save.
+  hot-reload: true

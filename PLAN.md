@@ -15,7 +15,6 @@ Field rules live outside the code; each field is validated by an immutable
 
 ## Non-goals for 1.0
 
-- Hot reload of YAML at runtime (load once, keep validators immutable).
 - Cross-field rules (planned for 1.1 as a second phase that runs after field checks).
 - Bean Validation (JSR 380) interop.
 
@@ -101,13 +100,19 @@ Messages support `{field}`, `{value}` and any option name such as `{min}`.
 4. **Spring Boot starter** — auto-config, annotation, advice, slice tests. ✅
 5. **OSS polish** — README, LICENSE, CONTRIBUTING, CI, sample app, publishing config. ✅ (publishing creds left to the owner)
 
+## Hot reload
+
+- Opt-in (`hotReload(true)` / `validate4j.hot-reload`). Validators stay immutable; a reload builds a
+  whole new form map from every `FormSource` and swaps it in with one volatile write.
+- `FormFileWatcher` uses `WatchService` on the parent directory, debounces bursts of events, and
+  runs reloads on one daemon thread. A failed reload keeps the previous forms.
+
 ## Later
 
 - Cross-field rules (`rules:` block evaluated after field phase).
 - POJO input via a `FieldAccessor` abstraction (reflection-based in the starter).
 - i18n via Spring `MessageSource`.
 - JMH benchmark module to tune `parallelThreshold`.
-- Hot reload for dev profiles.
 
 ## Toolchain
 

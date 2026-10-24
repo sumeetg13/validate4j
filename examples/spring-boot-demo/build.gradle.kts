@@ -13,3 +13,8 @@ dependencies {
     testImplementation(libs.spring.boot.starter.webmvc.test)
     testRuntimeOnly(libs.junit.launcher)
 }
+
+// Serve resources straight from src/main/resources so validate4j.hot-reload sees edits on save.
+tasks.bootRun {
+    sourceResources(sourceSets.main.get())
+}

@@ -98,8 +98,32 @@ inspect the `ValidationResult` yourself instead of throwing.
 | `validate4j.parallel-threshold` | `8` | Forms with at least this many fields are validated in parallel |
 | `validate4j.fail-on-missing-forms` | `false` | Fail startup when no form file is found |
 | `validate4j.web-enabled` | `true` | Register `@ValidateWith` support and the ProblemDetail handler |
+| `validate4j.hot-reload` | `false` | Watch form files on disk and apply edits without a restart |
 
 Register a `Validate4jCustomizer` bean to set a custom `Executor` or add forms programmatically.
+
+### Hot reload
+
+With `validate4j.hot-reload=true`, validate4j watches the form files (using Java's `WatchService`)
+and applies your changes as soon as you save. Files added to a watched directory are picked up too.
+
+- The new forms are swapped in atomically. A request that is already being validated finishes with the old rules.
+- If the edited file is invalid, the error is logged and the previous forms stay in use. Fix the file and save again.
+- Only files on disk can be watched, not resources inside a jar. Point `validate4j.locations` at a
+  `file:` path, or run with Gradle's `bootRun { sourceResources(sourceSets.main.get()) }` so edits under
+  `src/main/resources` are seen (the sample app does this).
+- On macOS the JDK polls for changes, so a save can take about 2 seconds to apply.
+
+Without Spring:
+
+```java
+Validate4j v = Validate4j.builder()
+        .loadYaml(Path.of("forms/signup.yaml"))
+        .hotReload(true)
+        .build();      // call v.close() to stop watching
+```
+
+`v.reload()` re-reads the files on demand.
 
 ## YAML reference
 

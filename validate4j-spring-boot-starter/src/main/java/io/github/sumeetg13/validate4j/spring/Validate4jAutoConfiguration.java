@@ -1,8 +1,7 @@
 package io.github.sumeetg13.validate4j.spring;
 
 import io.github.sumeetg13.validate4j.config.InvalidConfigurationException;
-import io.github.sumeetg13.validate4j.config.YamlFormLoader;
-import io.github.sumeetg13.validate4j.core.FormDefinition;
+import io.github.sumeetg13.validate4j.core.ReloadListener;
 import io.github.sumeetg13.validate4j.core.Validate4j;
 import io.github.sumeetg13.validate4j.spi.ValidatorFactory;
 import io.github.sumeetg13.validate4j.spi.ValidatorRegistry;
@@ -14,22 +13,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternUtils;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Builds a {@link Validate4j} bean from every YAML file matching {@code validate4j.locations}.
  * Any {@link ValidatorFactory} bean is registered before the forms are loaded, so custom types can
- * be referenced from YAML. {@link Validate4jCustomizer} beans run last.
+ * be referenced from YAML. {@link Validate4jCustomizer} beans run last. With {@code validate4j.hot-reload=true}
+ * form files on disk are watched and edits are applied without a restart.
  */
 @AutoConfiguration
 @EnableConfigurationProperties(Validate4jProperties.class)
@@ -54,21 +47,11 @@ public class Validate4jAutoConfiguration {
                 .registry(registry)
                 .parallelThreshold(properties.getParallelThreshold());
 
-        ResourcePatternResolver resolver = ResourcePatternUtils.getResourcePatternResolver(resourceLoader);
-        YamlFormLoader loader = new YamlFormLoader(registry);
-        List<String> loadedFrom = new ArrayList<>();
-        for (String location : properties.getLocations()) {
-            for (Resource resource : resolve(resolver, location)) {
-                try (InputStream in = resource.getInputStream()) {
-                    List<FormDefinition> forms = loader.load(in);
-                    builder.addForms(forms);
-                    loadedFrom.add(resource.getDescription());
-                } catch (IOException e) {
-                    throw new UncheckedIOException("Cannot read form definitions from " + resource, e);
-                } catch (InvalidConfigurationException e) {
-                    throw new InvalidConfigurationException(e.getMessage() + " (in " + resource.getDescription() + ")", e);
-                }
-            }
+        ResourceLocationsFormSource source = new ResourceLocationsFormSource(
+                ResourcePatternUtils.getResourcePatternResolver(resourceLoader), properties.getLocations());
+        builder.source(source);
+        if (properties.isHotReload()) {
+            builder.hotReload(true).reloadListener(new LoggingReloadListener(source));
         }
         customizers.orderedStream().forEach(c -> c.customize(builder));
 
@@ -80,7 +63,13 @@ public class Validate4jAutoConfiguration {
             }
             log.warn(msg);
         } else {
-            log.info("validate4j loaded forms " + validate4j.formNames() + " from " + loadedFrom);
+            log.info("validate4j loaded forms " + validate4j.formNames() + " from " + source.loadedFrom());
+        }
+        if (validate4j.isWatching()) {
+            log.info("validate4j hot reload is on: edits to the form files are applied without a restart");
+        } else if (properties.isHotReload()) {
+            log.warn("validate4j.hot-reload is on but none of " + properties.getLocations()
+                    + " is a file on disk (resources inside a jar cannot be watched)");
         }
         return validate4j;
     }
@@ -91,22 +80,22 @@ public class Validate4jAutoConfiguration {
         return new DefaultFormInputConverter();
     }
 
-    private static Resource[] resolve(ResourcePatternResolver resolver, String location) {
-        try {
-            Resource[] resources = resolver.getResources(location);
-            List<Resource> existing = new ArrayList<>(resources.length);
-            for (Resource r : resources) {
-                if (r.exists()) {
-                    existing.add(r);
-                }
-            }
-            return existing.toArray(new Resource[0]);
-        } catch (FileNotFoundException e) {
-            // A wildcard under a directory that does not exist (e.g. "classpath:forms/*.yaml" with no forms/ dir).
-            log.debug("validate4j location '" + location + "' matched nothing: " + e.getMessage());
-            return new Resource[0];
-        } catch (IOException e) {
-            throw new UncheckedIOException("Cannot resolve validate4j location '" + location + "'", e);
+    private static final class LoggingReloadListener implements ReloadListener {
+
+        private final ResourceLocationsFormSource source;
+
+        LoggingReloadListener(ResourceLocationsFormSource source) {
+            this.source = source;
+        }
+
+        @Override
+        public void reloaded(Set<String> formNames) {
+            log.info("validate4j reloaded forms " + formNames + " from " + source.loadedFrom());
+        }
+
+        @Override
+        public void reloadFailed(RuntimeException error) {
+            log.warn("validate4j reload failed, keeping previous forms: " + error.getMessage());
         }
     }
 }

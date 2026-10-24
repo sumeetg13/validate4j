@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+- Hot reload: `Validate4j.Builder.hotReload(true)` / `validate4j.hot-reload=true` watch form files and apply edits without a restart. Invalid edits are logged and the previous forms stay in use.
+- `Validate4j.reload()` to re-read form files on demand, and the `FormSource` abstraction behind it.
+
 ### Changed
 - Releases now publish automatically: pushing a `vX.Y.Z` tag builds, uploads and releases that version on Maven Central.
 

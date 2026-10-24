@@ -22,6 +22,12 @@ public class Validate4jProperties {
     /** Whether to fail startup when no form definition file matches any location. */
     private boolean failOnMissingForms = false;
 
+    /**
+     * Whether to watch form files on disk and apply edits without a restart. Meant for development;
+     * resources inside a jar cannot be watched.
+     */
+    private boolean hotReload = false;
+
     /** Whether the web layer should register the {@code @ValidateWith} request body advice and ProblemDetail handler. */
     private boolean webEnabled = true;
 
@@ -55,6 +61,14 @@ public class Validate4jProperties {
 
     public void setFailOnMissingForms(boolean failOnMissingForms) {
         this.failOnMissingForms = failOnMissingForms;
+    }
+
+    public boolean isHotReload() {
+        return hotReload;
+    }
+
+    public void setHotReload(boolean hotReload) {
+        this.hotReload = hotReload;
     }
 
     public boolean isWebEnabled() {
